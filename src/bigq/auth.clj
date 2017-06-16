@@ -1,14 +1,14 @@
 (ns bigq.auth
   (:import [java.time Instant])
-  (:require [[clojure.string :as str]
+  (:require [clojure.string :as str]
 
-             [cheshire.core :as json]
-             [clj-http.client :as http]
-             [buddy.core.keys :as keys]
-             [buddy.sign.jwt :as jwt]]))
+            [cheshire.core :as json]
+            [clj-http.client :as http]
+            [buddy.core.keys :as keys]
+            [buddy.sign.jwt :as jwt]))
 
 
-(defn read [path]
+(defn read-path [path]
   (-> path
       slurp
       (json/parse-string true)))
@@ -32,20 +32,14 @@
     pair))
 
 
-(defn *jwt->token [jwt]
+(defn *jwt->token! [jwt]
   (http/post "https://www.googleapis.com/oauth2/v3/token"
     {:form-params
      {:assertion jwt
       :grant_type "urn:ietf:params:oauth:grant-type:jwt-bearer"}}))
 
 
-(defn jwt->token [jwt]
-  (-> (*jwt->token jwt)
+(defn jwt->token! [jwt]
+  (-> (*jwt->token! jwt)
       :body
       (json/parse-string true)))
-
-
-(defn path->token [path]
-  (-> (read auth-path)
-      create-jwt
-      jwt->token))

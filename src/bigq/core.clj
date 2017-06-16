@@ -62,14 +62,16 @@
 
    https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query"
 
-  (let [token (auth/path->token auth-path)
-        job   (make-req token :post
-                (url-queries (:project_id auth-data))
-                (merge
-                  {:useLegacySql false
-                   :timeoutMs    10}
-                  query))
-        id    (job-id job)]
+  (let [auth-data (auth/read-path auth-path)
+        jwt       (auth/create-jwt auth-data)
+        token     (auth/jwt->token! jwt)
+        job       (make-req token :post
+                    (url-queries (:project_id auth-data))
+                    (merge
+                      {:useLegacySql false
+                       :timeoutMs    10}
+                      query))
+        id        (job-id job)]
 
     (loop [job job]
       (log/debug "loop" job)

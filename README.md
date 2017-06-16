@@ -1,11 +1,15 @@
 # bigq
 
-`bigq` is a simplest possible library for making requests to BigQuery. There is
-no Java client code inside, just calls to BigQuery's HTTP API. You give it
-credentials and a query, it authorizes itself and then executes a query and
+`bigq` is a simplest possible library for making requests to BigQuery. 
+
+[![Clojars Project](https://img.shields.io/clojars/v/modnakasta/bigq.svg)](https://clojars.org/modnakasta/bigq)
+
+There is no Java client code inside, just calls to BigQuery's HTTP API. You give
+it credentials and a query, it authorizes itself and then executes a query and
 waits for it to end:
 
 ```clj
+(require '[bigq.core :as bigq])
 (bigq/query "path/to/auth.json" {:query "select count(*) from my.table"})
 ```
 

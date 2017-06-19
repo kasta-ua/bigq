@@ -1,4 +1,5 @@
 (ns bigq.core
+  (:import [java.time Instant])
   (:require [clojure.string :as str]
 
             [cheshire.core :as json]
@@ -44,12 +45,25 @@
 (def job-complete? :jobComplete)
 
 
+(defn field->pair [field {:keys [v]}]
+  [(keyword (:name field))
+   (case (:type field)
+     "STRING"    v
+     "BYTES"     v
+     "FLOAT"     (Double/parseDouble v)
+     "FLOAT64"   (Double/parseDouble v)
+     "INTEGER"   (Long/parseLong v 10)
+     "INT64"     (Long/parseLong v 10)
+     "BOOLEAN"   (= v "TRUE")
+     "BOOL"      (= v "TRUE")
+     "TIMESTAMP" v
+     v)])
+
+
 (defn job->data [job]
-  (let [fields (->> (-> job :schema :fields)
-                    (mapv #(keyword (:name %))))
-        rows   (->> (:rows job)
-                    (map #(map :v (:f %))))]
-    (map #(into {} (map vector fields %)) rows)))
+  (let [fields (-> job :schema :fields)]
+    (->> (:rows job)
+         (map #(into {} (map field->pair fields (:f %)))))))
 
 
 (defn query [auth-path query]

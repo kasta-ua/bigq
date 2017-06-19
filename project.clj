@@ -1,4 +1,4 @@
-(defproject modnakasta/bigq "1.0.2"
+(defproject modnakasta/bigq "1.1.0"
   :description "Library for making requests to BigQuery"
   :url "https://github.com/modnakasta/bigq"
   :license {:name "Eclipse Public License - v 1.0"

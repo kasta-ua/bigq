@@ -8,7 +8,7 @@
 
   :dependencies
   [[org.clojure/clojure "1.8.0"]
-   [cheshire "5.7.0"]
+   [metosin/jsonista "0.2.1"]
    [clj-http "2.3.0"]
    [buddy/buddy-sign "1.4.0"]
    [com.taoensso/timbre "4.10.0"]])

@@ -1,17 +1,17 @@
 (ns bigq.auth
   (:import [java.time Instant])
   (:require [clojure.string :as str]
-
-            [cheshire.core :as json]
             [clj-http.client :as http]
             [buddy.core.keys :as keys]
-            [buddy.sign.jwt :as jwt]))
+            [buddy.sign.jwt :as jwt]
+
+            [bigq.utils :as utils]))
 
 
 (defn read-path [path]
   (-> path
       slurp
-      (json/parse-string true)))
+      utils/decode-json))
 
 
 (defn create-claim [account scopes]
@@ -42,4 +42,4 @@
 (defn jwt->token! [jwt]
   (-> (*jwt->token! jwt)
       :body
-      (json/parse-string true)))
+      utils/decode-json))

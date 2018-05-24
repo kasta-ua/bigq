@@ -1,12 +1,11 @@
 (ns bigq.core
   (:import [java.time Instant])
   (:require [clojure.string :as str]
-
-            [cheshire.core :as json]
             [clj-http.client :as http]
             [taoensso.timbre :as log]
 
-            [bigq.auth :as auth]))
+            [bigq.auth :as auth]
+            [bigq.utils :as utils]))
 
 
 (defn url-queries [project-id]
@@ -24,8 +23,8 @@
 (defn- make-req [token method url params]
   (log/debug "making request to" url)
   (let [data (cond->
-                 {:method method
-                  :url    url
+                 {:method       method
+                  :url          url
                   :content-type :json
                   :accept       :json
                   :headers      {"Authorization" (str "Bearer " (:access_token token))}}
@@ -38,7 +37,7 @@
 
         req (http/request data)]
 
-    (json/parse-string (:body req) true)))
+    (utils/decode-json (:body req))))
 
 
 (def job-id #(-> % :jobReference :jobId))

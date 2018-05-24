@@ -47,17 +47,18 @@
 
 (defn field->pair [field {:keys [v]}]
   [(keyword (:name field))
-   (case (:type field)
-     "STRING"    v
-     "BYTES"     v
-     "FLOAT"     (Double/parseDouble v)
-     "FLOAT64"   (Double/parseDouble v)
-     "INTEGER"   (Long/parseLong v 10)
-     "INT64"     (Long/parseLong v 10)
-     "BOOLEAN"   (= v "TRUE")
-     "BOOL"      (= v "TRUE")
-     "TIMESTAMP" v
-     v)])
+   (when-not (and (nil? v) (= "NULLABLE" (:mode field)))
+     (case (:type field)
+       "STRING"    v
+       "BYTES"     v
+       "FLOAT"     (Double/parseDouble v)
+       "FLOAT64"   (Double/parseDouble v)
+       "INTEGER"   (Long/parseLong v 10)
+       "INT64"     (Long/parseLong v 10)
+       "BOOLEAN"   (= v "TRUE")
+       "BOOL"      (= v "TRUE")
+       "TIMESTAMP" v
+       v))])
 
 
 (defn job->data [job]

@@ -13,6 +13,8 @@ waits for it to end:
 (bigq/query "path/to/auth.json" {:query "select count(*) from my.table"})
 ```
 
+To configure query see Google's [docs](https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#request-body).
+
 That's all! It's not possible to pass access token from outside, it's not
 handling access token expiration (it just generates new one every time) - we're
 using this library for scripts running from cron.

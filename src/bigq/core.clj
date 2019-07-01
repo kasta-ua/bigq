@@ -1,47 +1,13 @@
 (ns bigq.core
   (:import [java.time Instant])
   (:require [clojure.string :as str]
-            [clj-http.client :as http]
-            [taoensso.timbre :as log]
 
             [bigq.auth :as auth]
-            [bigq.utils :as utils]))
+            [bigq.request :as req]))
 
 
-(defn url-queries [project-id]
-  (assert project-id)
-  (format "https://www.googleapis.com/bigquery/v2/projects/%s/queries"
-    project-id))
-
-
-(defn url-results [project-id job-id]
-  (assert (and project-id job-id))
-  (format "https://www.googleapis.com/bigquery/v2/projects/%s/queries/%s"
-    project-id job-id))
-
-
-(defn- make-req [token method url params]
-  (log/debug "making request to" url)
-  (let [data (cond->
-                 {:method       method
-                  :url          url
-                  :content-type :json
-                  :accept       :json
-                  :headers      {"Authorization" (str "Bearer " (:access_token token))}}
-
-               (= method :post)
-               (assoc :form-params params)
-
-               (= method :get)
-               (assoc :query-params params))
-
-        req (http/request data)]
-
-    (utils/decode-json (:body req))))
-
-
-(def job-id #(-> % :jobReference :jobId))
-(def job-complete? :jobComplete)
+(def bq-queries "https://www.googleapis.com/bigquery/v2/projects/%s/queries")
+(def bq-results "https://www.googleapis.com/bigquery/v2/projects/%s/queries/%s")
 
 
 (defn field->pair [field {:keys [v]}]
@@ -60,10 +26,16 @@
        v))])
 
 
-(defn job->data [job]
+(defn extract-data [job]
   (let [fields (-> job :schema :fields)]
     (->> (:rows job)
          (map #(into {} (map field->pair fields (:f %)))))))
+
+
+(defn param [-name -type -value]
+  {:name           -name
+   :parameterType  {:type (str/upper-case (name -type))}
+   :parameterValue {:value -value}})
 
 
 (defn query [auth-path opts]
@@ -76,23 +48,14 @@
 
    https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#request-body"
 
-  (let [token     (auth/path->token auth-path)
-        job       (make-req token :post
-                    (url-queries (:project_id token))
-                    (merge
-                      {:useLegacySql false
-                       :timeoutMs    10}
-                      opts))
-        id        (job-id job)]
+  (let [token (auth/path->token auth-path)
+        data  (req/job {:url-start   bq-queries
+                        :url-results bq-results
+                        :project-id  (:project_id token)
+                        :token       token
+                        :data (merge
+                                {:useLegacySql false
+                                 :timeoutMs    10}
+                                opts)})]
 
-    (loop [job job]
-      (log/debug "loop" job)
-
-      (if (job-complete? job)
-        (job->data job)
-
-        (do
-          (Thread/sleep 1000)
-          (recur (make-req token :get
-                   (url-results (:project_id token) id)
-                   {:timeoutMs 10})))))))
+    (extract-data data)))

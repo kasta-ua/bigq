@@ -8,7 +8,9 @@
             [bigq.utils :as utils]))
 
 
-(defn read-path [path]
+(defn read-path
+  "Pass something slurpable: a path, or a file, or a resource"
+  [path]
   (-> path
       slurp
       utils/decode-json))
@@ -24,9 +26,8 @@
      :iat   issued-at}))
 
 
-(defn create-jwt [data]
-  (let [claim (create-claim (:client_email data)
-                ["https://www.googleapis.com/auth/bigquery"])
+(defn create-jwt [data scopes]
+  (let [claim (create-claim (:client_email data) scopes)
         key   (keys/str->private-key (:private_key data))
         pair  (jwt/sign claim key {:alg :rs256})]
     pair))
@@ -43,3 +44,15 @@
   (-> (*jwt->token! jwt)
       :body
       utils/decode-json))
+
+
+(defn path->token
+  "Pass something slurpable and list of scopes from:
+
+  https://developers.google.com/identity/protocols/googlescopes"
+  [path scopes]
+  (let [data (read-path path)]
+    (-> data
+        (create-jwt scopes)
+        (jwt->token!)
+        (assoc :project_id (:project_id data)))))

@@ -66,25 +66,23 @@
          (map #(into {} (map field->pair fields (:f %)))))))
 
 
-(defn query [auth-path query]
+(defn query [auth-path opts]
   "Returns a query result, given a path to authentication data (json with
    private key and stuff Google gives you after making a service account) and a
    query itself.
 
-   Query should be in format `{:query \"query-string\"}`, and you can supply
+   `opts` should be in format `{:query \"query-string\"}`, and you can supply
    other options, see documentation here:
 
-   https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query"
+   https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#request-body"
 
-  (let [auth-data (auth/read-path auth-path)
-        jwt       (auth/create-jwt auth-data)
-        token     (auth/jwt->token! jwt)
+  (let [token     (auth/path->token auth-path)
         job       (make-req token :post
-                    (url-queries (:project_id auth-data))
+                    (url-queries (:project_id token))
                     (merge
                       {:useLegacySql false
                        :timeoutMs    10}
-                      query))
+                      opts))
         id        (job-id job)]
 
     (loop [job job]
@@ -96,5 +94,5 @@
         (do
           (Thread/sleep 1000)
           (recur (make-req token :get
-                   (url-results (:project_id auth-data) id)
+                   (url-results (:project_id token) id)
                    {:timeoutMs 10})))))))

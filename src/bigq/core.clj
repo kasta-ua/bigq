@@ -48,7 +48,8 @@
 
    https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/query#request-body"
 
-  (let [token (auth/path->token auth-path)
+  (let [token (auth/path->token auth-path
+                ["https://www.googleapis.com/auth/bigquery"])
         data  (req/job {:url-start   bq-queries
                         :url-results bq-results
                         :project-id  (:project_id token)

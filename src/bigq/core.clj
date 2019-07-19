@@ -29,7 +29,7 @@
     [(keyword (:name field))
      (if-not (and (nil? v) (= "NULLABLE" (:mode field)))
        (if (sequential? v)
-         (map #(primitive-value ftype (:v %)) v)
+         (mapv #(primitive-value ftype (:v %)) v)
          (primitive-value ftype v)))]))
 
 

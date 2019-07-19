@@ -10,20 +10,27 @@
 (def bq-results "https://www.googleapis.com/bigquery/v2/projects/%s/queries/%s")
 
 
+(defn primitive-value [type v]
+  (case type
+    "STRING"    v
+    "BYTES"     v
+    "FLOAT"     (Double/parseDouble v)
+    "FLOAT64"   (Double/parseDouble v)
+    "INTEGER"   (Long/parseLong v 10)
+    "INT64"     (Long/parseLong v 10)
+    "BOOLEAN"   (= v "TRUE")
+    "BOOL"      (= v "TRUE")
+    "TIMESTAMP" v
+    v))
+
+
 (defn field->pair [field {:keys [v]}]
-  [(keyword (:name field))
-   (when-not (and (nil? v) (= "NULLABLE" (:mode field)))
-     (case (:type field)
-       "STRING"    v
-       "BYTES"     v
-       "FLOAT"     (Double/parseDouble v)
-       "FLOAT64"   (Double/parseDouble v)
-       "INTEGER"   (Long/parseLong v 10)
-       "INT64"     (Long/parseLong v 10)
-       "BOOLEAN"   (= v "TRUE")
-       "BOOL"      (= v "TRUE")
-       "TIMESTAMP" v
-       v))])
+  (let [ftype (:type field)]
+    [(keyword (:name field))
+     (if-not (and (nil? v) (= "NULLABLE" (:mode field)))
+       (if (sequential? v)
+         (map #(primitive-value ftype (:v %)) v)
+         (primitive-value ftype v)))]))
 
 
 (defn extract-data [job]
